@@ -1,0 +1,3 @@
+[DEFAULT]
+OWM_ID = api_key
+LOCATION = city_id
