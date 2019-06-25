@@ -1,8 +1,10 @@
 import configparser
+import datetime
 import time
 from pathlib import Path
 
 import pyowm
+from dataclasses import dataclass
 
 
 class WeatherInfo:
@@ -40,6 +42,25 @@ class WeatherInfo:
         return self.owm_weather.get_wind('meters_sec')['speed']
 
 
+@dataclass
+class FakeWeather:
+    clouds: int
+    sunset: datetime.datetime
+    sunrise: datetime.datetime
+    reference_time: datetime.datetime
+    month: int
+    max_temperature: float
+    wind: float
+
+    @classmethod
+    def from_weather(cls, weather: WeatherInfo):
+        return cls(clouds=weather.clouds,
+                   sunset=weather.sunset,
+                   sunrise=weather.sunrise,
+                   reference_time=weather.reference_time,
+                   month=weather.month,
+                   max_temperature=weather.max_temperature,
+                   wind=weather.wind)
 
 class WeatherMonitor:
     def __init__(self):
