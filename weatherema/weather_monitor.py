@@ -5,6 +5,42 @@ from pathlib import Path
 import pyowm
 
 
+class WeatherInfo:
+    """Thin wrapper over OWM info"""
+
+    def __init__(self, owm_weather):
+        self.owm_weather = owm_weather
+
+    @property
+    def clouds(self):
+        return self.owm_weather.get_clouds()
+
+    @property
+    def sunset(self):
+        return self.owm_weather.get_sunset_time("date")
+
+    @property
+    def sunrise(self):
+        return self.owm_weather.get_sunrise_time("date")
+
+    @property
+    def reference_time(self):
+        return self.owm_weather.get_reference_time("date")
+
+    @property
+    def month(self):
+        return int(self.reference_time.strftime("%m"))
+
+    @property
+    def max_temperature(self):
+        return self.owm_weather.get_temperature('celsius')['temp_max']
+
+    @property
+    def wind(self):
+        return self.owm_weather.get_wind('meters_sec')['speed']
+
+
+
 class WeatherMonitor:
     def __init__(self):
         config = configparser.ConfigParser()
@@ -26,4 +62,4 @@ class WeatherMonitor:
         self.last_check = time.time()
         self.last_weather = weather
 
-        return weather
+        return WeatherInfo(weather)
