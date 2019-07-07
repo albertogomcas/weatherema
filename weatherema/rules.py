@@ -13,9 +13,10 @@ logger = logging.getLogger(__name__)
 class Rule:
     priority: int
     action: Action
+    expire: int = None
 
     def check(self, information=None):
-        return False
+        return self.expire is None or time.time() > self.expire
 
     def __lt__(self, other: "Rule"):
         return self.priority < other.priority
@@ -26,41 +27,50 @@ class Day(Rule):
     advance_hours = datetime.timedelta(hours=2)
 
     def check(self, information):
-        return information.sunrise + Day.delay_hours < information.reference_time < information.sunset - Day.advance_hours
+        return super().check() and information.sunrise + Day.delay_hours < information.reference_time < information.sunset - Day.advance_hours
 
 
 class ColdMonths(Rule):
     months = [1, 2, 3, 4, 11, 12]
 
     def check(self, information):
-        return information.month in ColdMonths.months
+        return super().check() and information.month in ColdMonths.months
 
 
 class ColdDay(Rule):
     max_temperature = 18
 
     def check(self, information):
-        return information.max_temperature < ColdDay.max_temperature
+        return super().check() and information.max_temperature < ColdDay.max_temperature
 
 
 class Windy(Rule):
     max_windspeed = 11  # m/s 10-13.8 is strong breeze in Beaufort scale
 
     def check(self, information):
-        return information.wind > Windy.max_windspeed
+        return super().check() and information.wind > Windy.max_windspeed
 
 
 class Covered(Rule):
     min_coverage = 80  # percent
 
     def check(self, information):
-        return information.clouds >= Covered.min_coverage
+        return super().check() and information.clouds >= Covered.min_coverage
 
 
 class Default(Rule):
     def check(self, information):
         return True
 
+
+class ManualUp(Rule):
+    def check(self, information):
+        return super().check()
+
+
+class ManualDown(Rule):
+    def check(self, information):
+        return super().check()
 
 default_rules = [
     Windy(priority=100, action=UP),
@@ -75,7 +85,7 @@ default_rules = [
 class RuleChecker:
     def __init__(self, rules):
         self.rules = rules
-        self.dead_time_min = 30
+        self.dead_time_min = 60
         self.last_action = None
         self.last_action_time = 0
         self.override_dead_time_prio = 99
